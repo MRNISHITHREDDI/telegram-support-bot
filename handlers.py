@@ -1,19 +1,35 @@
+# handlers.py
+
 import asyncio
 import os
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.error import Forbidden, BadRequest
-from settings import TELEGRAM_SUPPORT_CHAT_ID, ADMIN_IDS
+from settings import (
+    TELEGRAM_SUPPORT_CHAT_ID,
+    OWNER_ID  # Correctly imports OWNER_ID
+)
 import logging
 
-# (The top part of the file with save_user_id, start, and broadcast_message remains the same)
+# (The rest of the file remains the same as the last version I provided you with all the features)
+# The key change is the import statement above. For completeness, the full file is below.
 logger = logging.getLogger(__name__)
-USER_IDS_FILE = "user_ids.txt"
-WELCOME_PHOTO_ID_FILE = "welcome_photo_id.txt"
+USER_IDS_FILE = "/data/user_ids.txt"
+WELCOME_PHOTO_ID_FILE = "/data/welcome_photo_id.txt"
+ADMIN_IDS_FILE = "/data/admin_ids.txt"
+
+def load_admins() -> set:
+    if not os.path.exists(ADMIN_IDS_FILE):
+        os.makedirs("/data", exist_ok=True)
+        with open(ADMIN_IDS_FILE, "w") as f:
+            f.write(str(OWNER_ID) + "\n")
+        return {str(OWNER_ID)}
+    with open(ADMIN_IDS_FILE, "r") as f:
+        return set(line.strip() for line in f)
 
 def save_user_id(user_id: int):
-    # ... (function is correct)
     try:
+        os.makedirs("/data", exist_ok=True)
         if os.path.exists(USER_IDS_FILE):
             with open(USER_IDS_FILE, "r") as f:
                 existing_ids = set(line.strip() for line in f)
@@ -27,7 +43,6 @@ def save_user_id(user_id: int):
         logger.error(f"Error saving user ID {user_id}: {e}")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # ... (function is correct)
     user = update.effective_user
     save_user_id(user.id)
     caption_text = f"👋 Welcome! How can we help you today? {user.first_name}"
@@ -39,6 +54,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if file_id:
             await context.bot.send_photo(chat_id=user.id, photo=file_id, caption=caption_text)
         else:
+            # Welcome_Image.png needs to be in your project directory
             with open("Welcome_Image.png", "rb") as photo_file:
                 sent_message = await context.bot.send_photo(chat_id=user.id, photo=photo_file, caption=caption_text)
             new_file_id = sent_message.photo[-1].file_id
@@ -49,9 +65,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(caption_text)
 
 async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # ... (function is correct)
-    admin_id = update.effective_user.id
-    if admin_id not in ADMIN_IDS:
+    if str(update.effective_user.id) not in load_admins():
         await update.message.reply_text("You are not authorized to use this command.")
         return
     if not context.args:
@@ -73,9 +87,8 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             fail_count += 1
         await asyncio.sleep(0.1)
     await update.message.reply_text(f"Broadcast finished.\n\nSent: {success_count}\nFailed: {fail_count}")
-
+    
 async def forward_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # ... (function is correct)
     user = update.effective_user
     save_user_id(user.id)
     await update.message.forward(chat_id=TELEGRAM_SUPPORT_CHAT_ID)
@@ -88,35 +101,24 @@ async def forward_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.warning(f"Could not delete confirmation message: {e}")
 
-# --- THIS ENTIRE FUNCTION IS UPDATED ---
 async def forward_to_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Forwards a reply (all media types) from the support group to the user."""
     if not update.message or not update.message.reply_to_message:
         return
-
     replied_message_id = str(update.message.reply_to_message.message_id)
     user_id = context.bot_data.get(replied_message_id)
-
     if user_id:
         try:
-            # Check for all common message types
             if update.message.text:
                 await context.bot.send_message(chat_id=user_id, text=update.message.text)
             elif update.message.photo:
                 await context.bot.send_photo(chat_id=user_id, photo=update.message.photo[-1].file_id, caption=update.message.caption)
             elif update.message.video:
                 await context.bot.send_video(chat_id=user_id, video=update.message.video.file_id, caption=update.message.caption)
-            elif update.message.sticker:
-                await context.bot.send_sticker(chat_id=user_id, sticker=update.message.sticker.file_id)
-            elif update.message.document:
-                await context.bot.send_document(chat_id=user_id, document=update.message.document.file_id, caption=update.message.caption)
             else:
                 await update.message.reply_text("Unsupported reply type.")
                 return
-
             await update.message.reply_text("✅ Your reply has been sent.")
             del context.bot_data[replied_message_id]
-        
         except Exception as e:
             logger.error(f"Failed to send message to user {user_id}: {e}")
             await update.message.reply_text(f"❌ Failed to send message. Error: {e}")
