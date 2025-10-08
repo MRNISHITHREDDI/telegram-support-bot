@@ -1,5 +1,3 @@
-# main.py
-
 import logging
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from handlers import start, forward_to_group, forward_to_user, broadcast_message
@@ -16,11 +14,13 @@ def main():
     
     application.add_handler(MessageHandler((filters.TEXT | filters.PHOTO) & ~filters.COMMAND & ~filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), forward_to_group))
     
-    # This filter must accept TEXT, PHOTO, and VIDEO
+    # --- THIS IS THE FIX ---
+    # The filter now listens for almost any kind of reply
     application.add_handler(MessageHandler(
-        (filters.TEXT | filters.PHOTO | filters.VIDEO) & filters.REPLY & filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
+        (filters.TEXT | filters.PHOTO | filters.VIDEO | filters.STICKER | filters.DOCUMENT) & filters.REPLY & filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
         forward_to_user
     ))
+    # ---------------------------
 
     logger.info("Bot is starting...")
     application.run_polling()
