@@ -50,5 +50,17 @@ def main():
     
     # Core support bot handlers
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler((filters.TEXT | filters.PHOTO) & ~filters.COMMAND & ~filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), forward_to_group))
-    application.add_handler(MessageHandler((filters.TEXT | filters.PHOTO | filters.VIDEO |
+    application.add_handler(MessageHandler(
+        (filters.TEXT | filters.PHOTO) & ~filters.COMMAND & ~filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
+        forward_to_group
+    ))
+    application.add_handler(MessageHandler(
+        (filters.TEXT | filters.PHOTO | filters.VIDEO | filters.Document) & filters.REPLY & filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
+        forward_to_user
+    ))
+
+    logging.getLogger(__name__).info("Bot is starting with all features...")
+    application.run_polling()
+
+if __name__ == "__main__":
+    main()
