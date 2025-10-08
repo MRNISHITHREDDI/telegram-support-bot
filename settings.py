@@ -1,9 +1,16 @@
 # settings.py
 
-TELEGRAM_TOKEN = "8323491619:AAErBPaV7dgTU0TxL75pd37lDDxQvwcHZkI" 
-TELEGRAM_SUPPORT_CHAT_ID = -1003194535937 # Your support group ID
+import os
+from dotenv import load_dotenv
 
-# --- THIS IS THE CHANGE ---
+load_dotenv()
+
+# Your bot's token from @BotFather
+TELEGRAM_TOKEN = os.getenv("8323491619:AAErBPaV7dgTU0TxL75pd37lDDxQvwcHZkI")
+
+# The chat ID of your private support GROUP
+TELEGRAM_SUPPORT_CHAT_ID = int(os.getenv("-1003194535937"))
+
 # The ID of the bot's owner (Super Admin). Only this user can add/remove other admins.
 # Find your ID by messaging @userinfobot.
-OWNER_ID = 7577482514 # ⬅️ PASTE YOUR OWNER ID HERE
+OWNER_ID = int(os.getenv("7577482514"))
