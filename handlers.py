@@ -1,5 +1,3 @@
-# handlers.py
-
 import asyncio
 import os
 from telegram import Update
@@ -8,6 +6,7 @@ from telegram.error import Forbidden, BadRequest
 from settings import TELEGRAM_SUPPORT_CHAT_ID, ADMIN_IDS
 import logging
 
+# (The top part of the file with save_user_id, start, and broadcast_message remains the same)
 logger = logging.getLogger(__name__)
 USER_IDS_FILE = "user_ids.txt"
 WELCOME_PHOTO_ID_FILE = "welcome_photo_id.txt"
@@ -89,8 +88,9 @@ async def forward_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.warning(f"Could not delete confirmation message: {e}")
 
-# This is the function that handles sending replies to users
+# --- THIS ENTIRE FUNCTION IS UPDATED ---
 async def forward_to_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Forwards a reply (all media types) from the support group to the user."""
     if not update.message or not update.message.reply_to_message:
         return
 
@@ -99,13 +99,17 @@ async def forward_to_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_id:
         try:
-            # This logic checks for the message type and sends it correctly
+            # Check for all common message types
             if update.message.text:
                 await context.bot.send_message(chat_id=user_id, text=update.message.text)
             elif update.message.photo:
                 await context.bot.send_photo(chat_id=user_id, photo=update.message.photo[-1].file_id, caption=update.message.caption)
             elif update.message.video:
                 await context.bot.send_video(chat_id=user_id, video=update.message.video.file_id, caption=update.message.caption)
+            elif update.message.sticker:
+                await context.bot.send_sticker(chat_id=user_id, sticker=update.message.sticker.file_id)
+            elif update.message.document:
+                await context.bot.send_document(chat_id=user_id, document=update.message.document.file_id, caption=update.message.caption)
             else:
                 await update.message.reply_text("Unsupported reply type.")
                 return
