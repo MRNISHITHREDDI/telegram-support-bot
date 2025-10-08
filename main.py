@@ -15,9 +15,9 @@ def main():
     application.add_handler(MessageHandler((filters.TEXT | filters.PHOTO) & ~filters.COMMAND & ~filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), forward_to_group))
     
     # --- THIS IS THE FIX ---
-    # The filter now listens for almost any kind of reply
+    # Changed filters.STICKER to filters.Sticker (with a capital S)
     application.add_handler(MessageHandler(
-        (filters.TEXT | filters.PHOTO | filters.VIDEO | filters.STICKER | filters.DOCUMENT) & filters.REPLY & filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
+        (filters.TEXT | filters.PHOTO | filters.VIDEO | filters.Sticker | filters.DOCUMENT) & filters.REPLY & filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
         forward_to_user
     ))
     # ---------------------------
