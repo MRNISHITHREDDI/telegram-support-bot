@@ -11,20 +11,16 @@ def main():
     
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Add command handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler(["broadcast", "boardcast"], broadcast_message))
     
-    # Add message handlers
     application.add_handler(MessageHandler((filters.TEXT | filters.PHOTO) & ~filters.COMMAND & ~filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), forward_to_group))
     
-    # --- THIS IS THE FIX ---
-    # The filter now listens for TEXT, PHOTO, or VIDEO replies from admins.
+    # This filter must accept TEXT, PHOTO, and VIDEO
     application.add_handler(MessageHandler(
         (filters.TEXT | filters.PHOTO | filters.VIDEO) & filters.REPLY & filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
         forward_to_user
     ))
-    # ---------------------------
 
     logger.info("Bot is starting...")
     application.run_polling()
