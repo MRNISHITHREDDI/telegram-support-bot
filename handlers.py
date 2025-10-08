@@ -11,7 +11,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 USER_IDS_FILE = "user_ids.txt"
-WELCOME_PHOTO_ID_FILE = "Winpay.txt"
+WELCOME_PHOTO_ID_FILE = "welcome_photo_id.txt"
 ADMIN_IDS_FILE = "admin_ids.txt"
 
 # --- Admin Management Helper Functions ---
