@@ -8,12 +8,12 @@ from telegram.error import Forbidden, BadRequest
 from settings import TELEGRAM_SUPPORT_CHAT_ID, ADMIN_IDS
 import logging
 
-# (The top part of the file with save_user_id, start, and broadcast_message remains the same)
 logger = logging.getLogger(__name__)
 USER_IDS_FILE = "user_ids.txt"
 WELCOME_PHOTO_ID_FILE = "welcome_photo_id.txt"
 
 def save_user_id(user_id: int):
+    # ... (function is correct)
     try:
         if os.path.exists(USER_IDS_FILE):
             with open(USER_IDS_FILE, "r") as f:
@@ -28,6 +28,7 @@ def save_user_id(user_id: int):
         logger.error(f"Error saving user ID {user_id}: {e}")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # ... (function is correct)
     user = update.effective_user
     save_user_id(user.id)
     caption_text = f"👋 Welcome! How can we help you today? {user.first_name}"
@@ -49,6 +50,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(caption_text)
 
 async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # ... (function is correct)
     admin_id = update.effective_user.id
     if admin_id not in ADMIN_IDS:
         await update.message.reply_text("You are not authorized to use this command.")
@@ -74,13 +76,11 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Broadcast finished.\n\nSent: {success_count}\nFailed: {fail_count}")
 
 async def forward_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # ... (function is correct)
     user = update.effective_user
     save_user_id(user.id)
     await update.message.forward(chat_id=TELEGRAM_SUPPORT_CHAT_ID)
-    reply_anchor = await context.bot.send_message(
-        chat_id=TELEGRAM_SUPPORT_CHAT_ID,
-        text=f"⬇️ Reply to this message to answer the user ⬇️\n(User ID: {user.id})"
-    )
+    reply_anchor = await context.bot.send_message(chat_id=TELEGRAM_SUPPORT_CHAT_ID, text=f"⬇️ Reply to this message to answer the user ⬇️\n(User ID: {user.id})")
     context.bot_data[str(reply_anchor.message_id)] = user.id
     confirmation_msg = await update.message.reply_text("Your message has been forwarded.")
     await asyncio.sleep(3)
@@ -89,9 +89,8 @@ async def forward_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.warning(f"Could not delete confirmation message: {e}")
 
-# --- THIS ENTIRE FUNCTION IS UPDATED ---
+# This is the function that handles sending replies to users
 async def forward_to_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Forwards a reply (text, photo, or video) from the support group to the user."""
     if not update.message or not update.message.reply_to_message:
         return
 
@@ -100,19 +99,17 @@ async def forward_to_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_id:
         try:
-            # Check the type of the message and use the correct sender
+            # This logic checks for the message type and sends it correctly
             if update.message.text:
                 await context.bot.send_message(chat_id=user_id, text=update.message.text)
             elif update.message.photo:
-                # Send the highest quality photo
                 await context.bot.send_photo(chat_id=user_id, photo=update.message.photo[-1].file_id, caption=update.message.caption)
             elif update.message.video:
                 await context.bot.send_video(chat_id=user_id, video=update.message.video.file_id, caption=update.message.caption)
             else:
-                await update.message.reply_text("Unsupported reply type. Please send text, photo, or video.")
+                await update.message.reply_text("Unsupported reply type.")
                 return
 
-            # If sending was successful, confirm to the admin
             await update.message.reply_text("✅ Your reply has been sent.")
             del context.bot_data[replied_message_id]
         
