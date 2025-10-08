@@ -1,16 +1,21 @@
-# settings.py
-
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Your bot's token from @BotFather
-TELEGRAM_TOKEN = os.getenv("8323491619:AAErBPaV7dgTU0TxL75pd37lDDxQvwcHZkI")
+# Correctly uses the NAME of the variable
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+if not TELEGRAM_TOKEN:
+    raise ValueError("ERROR: TELEGRAM_TOKEN environment variable not set in Railway!")
 
-# The chat ID of your private support GROUP
-TELEGRAM_SUPPORT_CHAT_ID = int(os.getenv("-1003194535937"))
+try:
+    # Correctly uses the NAME of the variable
+    TELEGRAM_SUPPORT_CHAT_ID = int(os.getenv("TELEGRAM_SUPPORT_CHAT_ID"))
+except (ValueError, TypeError):
+    raise ValueError("ERROR: TELEGRAM_SUPPORT_CHAT_ID not set or is not a number in Railway!")
 
-# The ID of the bot's owner (Super Admin). Only this user can add/remove other admins.
-# Find your ID by messaging @userinfobot.
-OWNER_ID = int(os.getenv("7577482514"))
+try:
+    # Correctly uses the NAME of the variable
+    OWNER_ID = int(os.getenv("OWNER_ID"))
+except (ValueError, TypeError):
+    raise ValueError("ERROR: OWNER_ID not set or is not a number in Railway!")
