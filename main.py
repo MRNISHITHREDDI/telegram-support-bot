@@ -12,12 +12,16 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler(["broadcast", "boardcast"], broadcast_message))
     
-    application.add_handler(MessageHandler((filters.TEXT | filters.PHOTO) & ~filters.COMMAND & ~filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), forward_to_group))
+    # This filter allows users to send text or photos to the bot
+    application.add_handler(MessageHandler(
+        (filters.TEXT | filters.PHOTO) & ~filters.COMMAND & ~filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
+        forward_to_group
+    ))
     
     # --- THIS IS THE FIX ---
-    # Changed filters.DOCUMENT to filters.Document (with a capital D)
+    # Simplified the filter to the most stable, common types to prevent crashes
     application.add_handler(MessageHandler(
-        (filters.TEXT | filters.PHOTO | filters.VIDEO | filters.Document) & filters.REPLY & filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
+        (filters.TEXT | filters.PHOTO | filters.VIDEO) & filters.REPLY & filters.Chat(chat_id=TELEGRAM_SUPPORT_CHAT_ID), 
         forward_to_user
     ))
     # ---------------------------
